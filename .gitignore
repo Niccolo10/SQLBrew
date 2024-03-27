@@ -1,0 +1,12 @@
+# Ignore all __pycache__ directories
+__pycache__/
+
+# Ignore db_config.json specifically in the db directory
+db/db_config.json
+
+# Ignore all files in the logs directory
+logs/*
+
+# Ignore the specific files
+output_filename.pdf
+output_filename
