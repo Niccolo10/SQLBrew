@@ -1,62 +1,91 @@
-# import random
 from mysql.connector import Error
 
-import constraint_oracle as co
 from db.db_connector import connect_to_mysql, load_db_config, logger
 
-add_employee = "INSERT INTO employees " "(name, age) " "VALUES (%s, %s)"
+# Import your grammar and solver classes
+from grammar.solver import OperationGrammar, TableGrammar
 
-# Load the configuration
-config = load_db_config()
 
-oracle = co.ConstraintOracle()
+class DBFuzzer:
+    def __init__(self):
+        self.config = load_db_config()
+        # self.oracle = co.ConstraintOracle()
+        self.cnx = None
+        self.cursor = None
+        if self.config:
+            self.connect_to_db()
+        self.table_grammar = TableGrammar()
+        self.operation_grammar = OperationGrammar()
 
-if config is not None:
-    try:
-        cnx = connect_to_mysql(config)
+    def connect_to_db(self):
+        try:
+            self.cnx = connect_to_mysql(self.config)
+            self.cursor = self.cnx.cursor()
+            logger.info("Database connection established.")
+        except Error as e:
+            logger.critical(f"Failed to connect to the database: {e}")
 
-        if cnx is not None:
-            logger.info("Starting fuzzing operations...")
-            cursor = cnx.cursor()
+    def reset_db(self):
+        reset_query = "DROP TABLE IF EXISTS t1;"
+        try:
+            self.cursor.execute(reset_query)
+            self.cnx.commit()
+            logger.info("Database reset successfully.")
+        except Error as e:
+            logger.error(f"Failed to reset the database: {e}")
+        pass
 
-            for i in range(5):
-                mutated_value = 17.99999999999999
-                data_employee = (
-                    "employee{i}",
-                    mutated_value,
-                )  # Fixed typo in 'employee'
-                answer = oracle.check_constraint(mutated_value)
+    def create_table(self):
+        create_table_sql = str(self.table_grammar.solve())
+        print(create_table_sql)
+        try:
+            self.cursor.execute(create_table_sql)
+            self.cnx.commit()
+            logger.info("Table created successfully.")
+        except Error as e:
+            logger.error(f"Failed to create table: {e}")
+            self.create_table()
 
-                try:
-                    # Attempt to insert new employee
-                    cursor.execute(add_employee, data_employee)
-                    cnx.commit()
-
-                    # Log insertion info with oracle's evaluation
+    def perform_operations(self):
+        solutions = self.operation_grammar.solve()
+        for solution in solutions:
+            operation_sql = str(
+                solution
+            )  # Assuming str(solution) returns the SQL statement
+            mutated_value = operation_sql.split()[-1].strip(");").strip("(")
+            # Example to extract mutated value
+            # answer = self.oracle.check_constraint(mutated_value)
+            answer = True  # Placeholder for the oracle evaluation
+            try:
+                print(operation_sql)
+                self.cursor.execute(operation_sql)
+                self.cnx.commit()
+                logger.info(f"Executed operation - Oracle evaluation: {answer}")
+                if not answer:
                     logger.info(
-                        f"Inserted new employee with ID: {cursor.lastrowid} - Oracle evaluation: {answer}"
+                        f"Mutated value: {mutated_value} did not trigger the constraint as expected."
                     )
-                    if answer is False:
-                        logger.info(
-                            f"Mutated value: {mutated_value} - Oracle evaluation: {answer}"
-                        )  # BUUUUGGGGGG
-                except Error as e:
-                    # Log the error and continue with the next iteration
-                    logger.error(
-                        f"An error occurred during the insertion of the new employee: {e} - Oracle evaluation: {answer}"
+            except Error as e:
+                logger.error(
+                    f"Error during operation: {e} - Oracle evaluation: {answer}"
+                )
+                if answer:
+                    logger.info(
+                        f"Mutated value: {mutated_value} should have triggered the constraint."
                     )
-                    if answer is True:
-                        logger.info(
-                            f"Mutated value: {mutated_value} - Oracle evaluation: {answer}"
-                        )  # BUUUUGGGGGG
-                    continue
 
-            # Remember to close the cursor and connection after operations
-            cursor.close()
-            cnx.close()
+    def run_fuzzing_cycle(self):
+        if self.cnx is not None:
+            self.reset_db()
+            self.create_table()
+            self.perform_operations()
+            self.cursor.close()
+            self.cnx.close()
         else:
-            logger.error("Database connection could not be established.")
-    except Exception as e:
-        logger.critical(f"An unexpected error occurred during fuzzing operations: {e}")
-else:
-    logger.error("Could not load the database configuration.")
+            logger.error("No database connection is available.")
+
+
+# Usage
+if __name__ == "__main__":
+    fuzzer = DBFuzzer()
+    fuzzer.run_fuzzing_cycle()
