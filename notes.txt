@@ -1,0 +1,165 @@
+def set_params(parameters, command_line_args, create_files=True):
+    """
+    This function parses all command line arguments specified by the user.
+    If certain parameters are not set then defaults are used (e.g. random
+    seeds, elite size). Sets the correct imports given command line
+    arguments. Sets correct grammar file and fitness function. Also
+    initialises save folders and tracker lists in utilities.trackers.
+
+    :param command_line_args: Command line arguments specified by the user.
+    :return: Nothing.
+    """
+
+    from PonyGE2.src.representation import grammar
+    from PonyGE2.src.utilities.algorithm.command_line_parser import parse_cmd_args
+    from PonyGE2.src.utilities.algorithm.initialise_run import (
+        initialise_run_params,
+        set_param_imports,
+    )
+    from PonyGE2.src.utilities.fitness.math_functions import return_one_percent
+    from PonyGE2.src.utilities.stats import clean_stats, trackers
+
+    cmd_args, unknown = parse_cmd_args(command_line_args)
+
+    if unknown:
+        # We currently do not parse unknown parameters. Raise error.
+        s = (
+            "algorithm.parameters.set_params
+Error: "
+            "unknown parameters: %s
+You may wish to check the spelling, "
+            "add code to recognise this parameter, or use "
+            "--extra_parameters" % str(unknown)
+        )
+        raise Exception(s)
+
+    # LOAD PARAMETERS FILE
+    # NOTE that the parameters file overwrites all previously set parameters.
+    if "PARAMETERS" in cmd_args:
+        load_params(path.join("..", "parameters", cmd_args["PARAMETERS"]))
+
+    # Join original params dictionary with command line specified arguments.
+    # NOTE that command line arguments overwrite all previously set parameters.
+    params.update(cmd_args)
+
+    if parameters["LOAD_STATE"]:
+        # Load run from state.
+        from PonyGE2.src.utilities.algorithm.state import load_state
+
+        # Load in state information.
+        individuals = load_state(parameters["LOAD_STATE"])
+
+        # Set correct search loop.
+        from PonyGE2.src.algorithm.search_loop import search_loop_from_state
+
+        parameters["SEARCH_LOOP"] = search_loop_from_state
+
+        # Set population.
+        setattr(trackers, "state_individuals", individuals)
+
+    else:
+        if parameters["REPLACEMENT"].split(".")[-1] == "steady_state":
+            # Set steady state step and replacement.
+            parameters["STEP"] = "steady_state_step"
+            parameters["GENERATION_SIZE"] = 2
+
+        else:
+            # Elite size is set to either 1 or 1% of the population size,
+            # whichever is bigger if no elite size is previously set.
+            if parameters["ELITE_SIZE"] is None:
+                parameters["ELITE_SIZE"] = return_one_percent(
+                    1, parameters["POPULATION_SIZE"]
+                )
+
+            # Set the size of a generation
+            parameters["GENERATION_SIZE"] = (
+                parameters["POPULATION_SIZE"] - parameters["ELITE_SIZE"]
+            )
+
+        if (
+            parameters["MUTATION_PROBABILITY"] is not None
+            and parameters["MUTATION_EVENTS"] != 1
+        ):
+            s = (
+                "operators.mutation.int_flip_per_codon
+"
+                "Error: mutually exclusive parameters MUTATION_PROBABILITY"
+                "and MUTATION_EVENTS have been explicitly set.
+"
+                "Only one of these parameters can be used at a time."
+            )
+            raise Exception(s)
+
+        # Initialise run lists and folders before we set imports.r
+        initialise_run_params(create_files)
+
+        # Set correct param imports for specified function options, including
+        # error metrics and fitness functions.
+        set_param_imports()
+
+        # Clean the stats dict to remove unused stats.
+        clean_stats.clean_stats()
+
+        # Set GENOME_OPERATIONS automatically for faster linear operations.
+        if (
+            parameters["CROSSOVER"].representation == "subtree"
+            or parameters["MUTATION"].representation == "subtree"
+        ):
+            parameters["GENOME_OPERATIONS"] = False
+        else:
+            parameters["GENOME_OPERATIONS"] = True
+
+        # Ensure correct operators are used if multiple fitness functions used.
+        if hasattr(parameters["FITNESS_FUNCTION"], "multi_objective"):
+            # Check that multi-objective compatible selection is specified.
+            if not hasattr(parameters["SELECTION"], "multi_objective"):
+                s = (
+                    "algorithm.parameters.set_params
+"
+                    "Error: multi-objective compatible selection "
+                    "operator not specified for use with multiple "
+                    "fitness functions."
+                )
+                raise Exception(s)
+
+            if not hasattr(parameters["REPLACEMENT"], "multi_objective"):
+                # Check that multi-objective compatible replacement is
+                # specified.
+                if not hasattr(parameters["REPLACEMENT"], "multi_objective"):
+                    s = (
+                        "algorithm.parameters.set_params
+"
+                        "Error: multi-objective compatible replacement "
+                        "operator not specified for use with multiple "
+                        "fitness functions."
+                    )
+                    raise Exception(s)
+
+        # Parse grammar file and set grammar class.
+        parameters["BNF_GRAMMAR"] = grammar.Grammar(
+            path.join("..", "grammars", parameters["GRAMMAR_FILE"])
+        )
+
+        # If OPTIMIZE_CONSTANTS, check that the grammar is suitable
+        if parameters["OPTIMIZE_CONSTANTS"]:
+            if "c[" not in parameters["BNF_GRAMMAR"].terminals:
+                raise ValueError("Grammar unsuitable for OPTIMIZE_CONSTANTS")
+
+        # Population loading for seeding runs (if specified)
+        if parameters["TARGET_SEED_FOLDER"]:
+            # Import population loading function.
+            from PonyGE2.src.operators.initialisation import load_population
+
+            # A target folder containing seed individuals has been given.
+            parameters["SEED_INDIVIDUALS"] = load_population(
+                parameters["TARGET_SEED_FOLDER"]
+            )
+
+        elif parameters["REVERSE_MAPPING_TARGET"]:
+            # A single seed phenotype has been given. Parse and run.
+
+            # Import GE LR Parser.
+            from PonyGE2.src.scripts import GE_LR_parser
+
+            # Parse seed individual and store in parameters.
+            parameters["SEED_INDIVIDUALS"] = [GE_LR_parser.main()]

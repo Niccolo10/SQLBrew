@@ -10,3 +10,12 @@ logs/*
 # Ignore the specific files
 output_filename.pdf
 output_filename
+
+*.py[cod]
+__pycache__/
+.DS_Store
+results/
+Banknote.csv
+Banknote_shuf.csv
+.idea/
+src/python_log.txt
