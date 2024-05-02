@@ -5079,3 +5079,6 @@
 2024-05-02 15:23:20,048 - DBConnectorLogger - INFO - Database reset successfully.
 2024-05-02 15:23:20,103 - DBConnectorLogger - ERROR - Failed to create table: 3820 (HY000): Check constraint 'v1' refers to non-existing column 'u'.
 2024-05-02 15:23:20,297 - DBConnectorLogger - INFO - Table created successfully.
+2024-05-02 15:31:49,820 - DBConnectorLogger - INFO - Database connection established.
+2024-05-02 15:31:49,886 - DBConnectorLogger - INFO - Database reset successfully.
+2024-05-02 15:31:50,030 - DBConnectorLogger - INFO - Table created successfully.
