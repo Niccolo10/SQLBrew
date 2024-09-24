@@ -1,3 +1,3 @@
 # SQLBrew
- Fuzzing DBMS with precision-crafted constraint solver inputs.
+ Fuzzing DBMS for constraint logical bugs.
 # SQLBrew

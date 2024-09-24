@@ -2,11 +2,14 @@
 <insert> ::= "INSERT INTO t1 (c1) VALUES (("<values>"));"
 <conditional_update> ::="UPDATE t1 SET c1 = (("<values>")) WHERE "<condition>";"
 #<conditional_replace> ::="REPLACE INTO t1 (c1) VALUES ("<values>") WHERE ("<condition>");"
-<condition> ::="id = "<id_value>
-<id_value> ::=<digit>|<id_value><digit>
-<values>::=<numeric>|<string>
+<condition> ::="id = "1
+<values>::=<is_negative><numeric>|"'"<string>"'"|"'"<mixs>"'"|<bool>
 <numeric>::=<digits>|<digits>"."<digits>
-<digits>::=<digit>|<digit><digits>
-<string>::=<character>|<character><string>
+<mixs>::=<mix_value>|<mix_value><mixs>|<mix_value><mixs><mix_value>|<mix_value><mix_value><mix_value><mixs><mix_value><mix_value><mix_value>
+<digits>::=<digit>|<digit><digit>|<digit><digit><digit>|<digit><digit><digit><digit><digit><digit>|<digit><digit><digit><digit><digit><digit><digit><digit><digit><digit>
 <digit>::=0|1|2|3|4|5|6|7|8|9
-<character>::=a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z
+<is_negative>::=-|+
+<bool>::=True|False
+<string>::=<character>|<character><character>|<character><character><character>|<character><character><character><character><character><character>|<character><character><character><character><character>
+<mix_value>::=<character><digit><character>|<character><digit><character><character><digit><character>|<digit><character><digit>|<digit><character><digit><digit><character><digit>
+<character>::=a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z|A|B|C|D|E|F|G|H|I|J|K|L|M|N|O|P|Q|R|S|T|U|V|W|X|Y|Z|!|"|#|$|%|&|'|(|)|*|+|,|-|.|\|/|:|;|<|=|>|?|@|[|||]|^|_|`|{|\\|}|~

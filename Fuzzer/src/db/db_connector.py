@@ -6,7 +6,7 @@ import time
 import mysql.connector
 
 # Setup logger
-logger = logging.getLogger("DBConnectorLogger")
+logger = logging.getLogger("DBLogger")
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
@@ -22,6 +22,24 @@ log_file_path = os.path.join(
 file_handler = logging.FileHandler(log_file_path)
 file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
+
+
+def log_plain_message(logger, message):
+    """
+    Logs a plain message without additional info like timestamps and logger names.
+    """
+    # Save the original formatters
+    original_formatters = []
+    for handler in logger.handlers:
+        original_formatters.append(handler.formatter)
+        handler.setFormatter(logging.Formatter("%(message)s"))
+
+    # Log the plain message
+    logger.info(message)
+
+    # Restore the original formatters
+    for handler, formatter in zip(logger.handlers, original_formatters):
+        handler.setFormatter(formatter)
 
 
 def load_db_config(config_filename="db_config.json"):

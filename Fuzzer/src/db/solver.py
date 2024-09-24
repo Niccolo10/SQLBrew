@@ -10,24 +10,29 @@ class TableGrammar:
     def __init__(self) -> None:
         self.GRAMMAR: Grammar = {
             "<start>": [
-                "CREATE TABLE <table-name> (id INT AUTO_INCREMENT PRIMARY KEY , <column-and-constraints>);"
+                "CREATE TABLE <table-name> (id INT AUTO_INCREMENT PRIMARY KEY , <column-and-constraints>);",
             ],
             "<table-name>": ["t1"],
-            "<column-and-constraints>": [
-                "<column>, CONSTRAINT <constraint-name> CHECK (<check-condition>)",
-            ],
-            "<column>": ["<column-name> <data-type>"],
+            "<column-and-constraints>": ["<column-name> <data-type>"],
             "<column-name>": ["c1"],
-            "<data-type>": ["INT", "VARCHAR(255)", "BOOLEAN", "FLOAT"],
-            "<constraint-name>": ["v1"],
-            "<check-condition>": [
-                "c1 " "<operator>" " <value>",
-                "c1 " "<operator>" " <function>" " <value>",
-                "c1 " "<operator>" " <value> " "AND " "<check-condition>",
+            "<data-type>": [
+                "<INT-route>",
+                "<VARCHAR-route>",
+                "<FLOAT-route>",
             ],
-            "<value>": ["(<digits>)", "(<digits>.<digits>)", "(<strings>)"],
-            "<strings>": ["<string>", "<string><strings>"],
-            "<digits>": ["<digit><digits>", "<digit>"],
+            "<INT-route>": [
+                "INT UNIQUE COLLATE utf8mb4_bin, CONSTRAINT <constraint-name> CHECK (<generic-check>)"
+            ],
+            "<VARCHAR-route>": [
+                "VARCHAR(255) UNIQUE COLLATE utf8mb4_bin, CONSTRAINT <constraint-name> CHECK (<generic-check>)"
+            ],
+            "<FLOAT-route>": [
+                "FLOAT UNIQUE COLLATE utf8mb4_bin, CONSTRAINT <constraint-name> CHECK (<generic-check>)"
+            ],
+            "<constraint-name>": ["v1"],
+            ("<generic-check>"): ["<only-operator>", "<operator_math>"],
+            "<only-operator>": ["c1 <operator> <value>"],
+            "<operator_math>": ["c1 <operator> <math-function> <value>"],
             "<operator>": [
                 "=",
                 ">",
@@ -35,28 +40,58 @@ class TableGrammar:
                 "<=",
                 ">=",
                 "!=",
+                "LIKE",
             ],
-            "<function>": [
+            "<math-function>": [
                 "ABS",
                 "ACOS",
-                "CHAR_LENGTH",
                 "COS",
                 "EXP",
                 "LOG",
-                "MOD",
-                "ROUND",
                 "SIN",
                 "SQRT",
                 "TAN",
-                "HEX",
+                "CEIL",
+                "FLOOR",
+                "ASIN",
+                "ATAN",
+                "DEGREES",
+                "RADIANS",
+                "ROUND",
+                "SIGN",
+                "ASCII",
+                "BIN",
+                "BIT_LENGTH",
+                "CHAR_LENGTH",
                 "LENGTH",
-                "LIKE",
+                "LOWER",
+                "UPPER",
             ],
+            "<value>": [
+                "(<is_negative><numeric-value>)",
+                "('<string-value>')",
+                "<boolean-value>",
+                "<mixed-value>",
+            ],
+            "<numeric-value>": ["<digits>", "<digits>.<digits>"],
+            "<string-value>": ["<strings>"],
+            "<boolean-value>": ["<boolean>"],
+            "<mixed-value>": ["('<mixs>')"],
+            "<boolean>": ["(TRUE)", "(FALSE)"],
+            "<strings>": ["<string>", "<string><strings>", "<string><strings><string>"],
+            "<string>": list(
+                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ "
+            ),
+            "<digits>": ["<digit><digits>", "<digit>", "<digit><digits><digit>"],
             "<digit>": list("0123456789"),
-            "<string>": list("abcdefghijklmnopqrstuvwxyz"),
+            "<mixs>": ["<mix>", "<mix><mixs>", "<mix><mixs><mix>"],
+            "<mix>": list(
+                "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~ \t\n\r\f\v"
+            ),
+            "<is_negative>": ["-", ""],
         }
-
-        # self.constraints = """ str.to.int(<digit>) > 5"""
+        # DEFAULT NULL values
+        # self.constraints = """  <math-function> = <placeholder> """
 
         self.mutator = Mutator(self.GRAMMAR, min_mutations=2, max_mutations=5)
 
@@ -80,30 +115,10 @@ class TableGrammar:
 
 
 """
-# Example usage:
 table = TableGrammar()
 solutions = []
 
 for i in range(20):
     solutions = table.solve()
-    for solution in solutions:
-        print((solution))
-        # mutated_solution = table.mutate(solution)
-        # print(
-        #    mutated_solution
-        # )  # str(solution) if i want the string -> now is returning DerivationTree / print implicity transform in string
-# dot = display_tree(solution)
-# dot.render("output_filename", view=True)
-
-operation = OperationGrammar()
-solutions = []
-
-for i in range(20):
-    solutions = operation.solve()
-    for solution in solutions:
-        print((solution))
-        # mutated_solution = table.mutate(solution)
-        # print(
-        #    mutated_solution
-        # )  # str(solution) if i want the string -> now is returning DerivationTree / print implicity transform in string
+    print(str(solutions))
 """

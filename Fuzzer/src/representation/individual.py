@@ -126,7 +126,7 @@ class Individual(object):
 
         return new_ind
 
-    def evaluate(self, cnx, cursor, logger):
+    def evaluate(self, cnx, cursor, logger, cycle_number):
         """
         Evaluates phenotype in using the fitness function set in the params
         dictionary. For regression/classification problems, allows for
@@ -139,7 +139,7 @@ class Individual(object):
 
         # Evaluate fitness using specified fitness function.
         self.fitness = params["FITNESS_FUNCTION"](
-            self, cnx=cnx, cursor=cursor, logger=logger
+            self, cnx=cnx, cursor=cursor, logger=logger, cycle_number=cycle_number
         )
 
         if params["MULTICORE"]:

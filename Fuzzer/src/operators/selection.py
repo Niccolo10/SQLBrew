@@ -46,7 +46,7 @@ def tournament(population):
         winners.append(max(competitors))
 
     # Return the population of tournament winners.
-    print("winner -_>", (winners[0]))
+    #print("winner -_>", (winners[0]))
     return winners
 
 

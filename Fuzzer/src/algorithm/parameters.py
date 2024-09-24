@@ -11,7 +11,7 @@ params = {
     "SEARCH_LOOP": "search_loop",
     "STEP": "step",
     # Evolutionary Parameters
-    "POPULATION_SIZE": 20,
+    "POPULATION_SIZE": 100,
     "GENERATIONS": 5,
     "HILL_CLIMBING_HISTORY": 1000,
     "SCHC_COUNT_METHOD": "count_all",
@@ -59,7 +59,7 @@ params = {
     # Set selection operator.
     "SELECTION": "operators.selection.tournament",
     # For tournament selection
-    "TOURNAMENT_SIZE": 2,
+    "TOURNAMENT_SIZE": 10,
     # For truncation selection
     "SELECTION_PROPORTION": 0.5,
     # Allow for selection of invalid individuals during selection process.
@@ -78,11 +78,11 @@ params = {
     # MUTATION
     # all mutation operators: subtree, int_flip_per_ind, int_flip_per_codon
     # Set mutation operator.
-    "MUTATION": "operators.mutation.subtree",
+    "MUTATION": "operators.mutation.int_flip_per_ind",
     # all mutation operators: subtree, int_flip_per_ind, int_flip_per_codon
     # Set mutation probability (None defaults to 1 over the length of
     # the genome for each codon)
-    "MUTATION_PROBABILITY": None,
+    "MUTATION_PROBABILITY": 0.50,
     # Set number of mutation events
     "MUTATION_EVENTS": 10,
     # Prevents mutation from generating invalids.

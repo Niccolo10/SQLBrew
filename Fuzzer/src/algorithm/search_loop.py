@@ -8,7 +8,7 @@ from utilities.algorithm.initialise_run import pool_init
 from utilities.stats import trackers
 
 
-def search_loop(cnx, cursor, logger):
+def search_loop(cnx, cursor, logger, cycle_number):
     """
     This is a standard search process for an evolutionary algorithm. Loop over
     a given number of generations.
@@ -27,7 +27,7 @@ def search_loop(cnx, cursor, logger):
     individuals = initialisation(params["POPULATION_SIZE"])
 
     # Evaluate initial population
-    individuals = evaluate_fitness(individuals, cnx, cursor, logger)
+    individuals = evaluate_fitness(individuals, cnx, cursor, logger, cycle_number)
 
     # Generate statistics for run so far
     get_stats(individuals)
@@ -37,7 +37,7 @@ def search_loop(cnx, cursor, logger):
         stats["gen"] = generation
 
         # New generation
-        individuals = params["STEP"](individuals, cnx, cursor, logger)
+        individuals = params["STEP"](individuals, cnx, cursor, logger, cycle_number)
 
     if params["MULTICORE"]:
         # Close the workers pool (otherwise they'll live on forever).
